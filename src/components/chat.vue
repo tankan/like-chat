@@ -12,6 +12,7 @@ const socket = initial();
 const uid = ref("");
 const msg = ref("");
 const chat: Ref<message[]> = ref([]);
+const joining = ref(true);
 socket.on("connect", onConnect);
 socket.on("disconnect", onDisconnect);
 socket.on("joined", onJoined);
@@ -44,7 +45,6 @@ function onLogged(room: string, id: string) {
   console.info("onLogged: %O, %O", room, id);
 }
 function onMsg(id: string, message: string) {
-  console.info("id: %s, msg: %s", id, message);
   chat.value.push({
     id: id,
     message: message
@@ -55,10 +55,12 @@ function emit(name: string, ...msg: any) {
 }
 function joined() {
   emit("join", roomId.value);
+  joining.value = false;
   console.log("加入群聊", roomId.value);
 }
 function logout() {
   emit("logout", roomId.value);
+  joining.value = true;
 }
 function send(){
   if (msg.value) {
@@ -66,26 +68,38 @@ function send(){
     msg.value = "";
   }
 }
-// function change(e: Event) {
-//   console.info("change: %O", e.target);
-//   msg.value = e.target?.value;
-// }
 </script>
 
 <template>
-  <div class="card">
-    <div>
+  <div class="flex flex-col justify-items-center chat-card chat-wd">
+    <div class="text-left chat-content">
       <div v-for="group in chat" :key="group.id">
-        <span>【{{ group.id }}】：</span>
-        <span>{{ group.message }}</span>
+        <p class="text-gray-700  pl-2 pr-2 break-all">{{uid === group.id ? "我" : `用户${group.id}`}}: {{ group.message }}</p>
       </div>
     </div>
-    <div>
-      <textarea v-model="msg" spellcheck="false" draggable="false" placeholder="请输入你要发送的消息内容" name="chat" id="chat" cols="30" rows="3" autocapitalize="none" autocomplete="off" autofocus="true"></textarea>
+    <div class="chat-wd">
+      <textarea class="chat-wd" :disabled="joining" v-model="msg" spellcheck="false" draggable="false" placeholder="请输入你要发送的消息内容" name="chat" rows="4" autocapitalize="none" autocomplete="off" autofocus="true"></textarea>
     </div>
-    <!-- contenteditable -->
-    <button @click.stop="joined">加入群聊</button>
-    <button @click.stop="logout">退出群聊</button>
-    <button @click="send">发送</button>
+    <div class="chat-wd">
+      <button v-if="joining" @click.stop="joined">加入群聊</button>
+      <button v-else @click.stop="logout">退出群聊</button>
+      <button class="ml-4" :disabled="!msg" @click="send">发送消息</button>
+    </div>
   </div>
 </template>
+<style>
+.chat-wd {
+  width: 280px;
+}
+.chat-card {
+  overflow: hidden;
+}
+.chat-content {
+  width: 280px;
+  height: 300px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  background: #f9f9f9;
+}
+</style>
