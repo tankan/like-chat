@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import HelloWorld from "./components/HelloWorld.vue";
+import chat from "./components/chat.vue";
+import rtc from "./components/rtc.vue";
 </script>
 
 <template>
-  <HelloWorld msg="Vite + Vue" />
+  <rtc />
+  <chat />
 </template>
 
 <style scoped>

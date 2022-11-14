@@ -62,7 +62,16 @@ button:focus-visible {
 .card {
   padding: 2em;
 }
-
+textarea {
+  font-size: 16px;
+  padding: 6px 6px;
+  border: 1px solid #646cff;
+  resize: none;
+  outline: none;
+  user-select: none;
+  -webkit-user-modify: read-write-plaintext-only;
+  -webkit-user-drag: none;
+}
 #app {
   max-width: 1280px;
   margin: 0 auto;
