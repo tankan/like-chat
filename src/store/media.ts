@@ -1,6 +1,5 @@
 import { defineStore } from "pinia";
-import { useDevicesList, useUserMedia, useDisplayMedia } from "@vueuse/core";
-import { ref } from "vue";
+import { useDevicesList } from "@vueuse/core";
 export const useMediaStore = defineStore("mediaStore", () => {
   const {
     devices,
@@ -10,5 +9,6 @@ export const useMediaStore = defineStore("mediaStore", () => {
   } = useDevicesList({
     requestPermissions: true,
   });
-  return { };
+  console.log("devices: %O, cameras: %O, microphones: %O, speakers: %O", devices, cameras, microphones, speakers);
+  return { devices, cameras, microphones, speakers };
 });
