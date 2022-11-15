@@ -43,5 +43,5 @@ export async function createRemoteStream(obj: remoteData) {
         sdp: answer.sdp,
       })
     ));
-  // return pc;
+  return pc;
 }
