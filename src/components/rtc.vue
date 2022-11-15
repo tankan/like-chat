@@ -76,30 +76,36 @@ async function joined() {
   }
   console.log("加入连麦", roomId.value, pc, stream.value);
 }
-function logout() {
-  emit("logout", roomId.value);
-  const senders = peer.value.getSenders();
-  senders.forEach((sender) => {
-    sender.track?.stop();
-  });
+function closeVideo() {
+  if (peer.value) {
+    const senders = peer.value.getSenders();
+    senders.forEach((sender) => {
+      sender.track?.stop();
+    });
+    peer.value.close();
+  }
   local.value.srcObject = null;
   joining.value = true;
-  peer.value.close();
+}
+function logout() {
+  emit("logout", roomId.value);
+  closeVideo();
   console.log("结束连麦", roomId.value);
 }
 async function playRemoteStream(id: string) {
-  if (!remote.value.srcObject) {
-    await createRemoteStream({
-      streamUrl: id,
-      onconnectionstatechange: (peerEvent: Event) => {
-        console.log("RTC peer connection event: %O", peerEvent)
-      },
-      ontrack: (trackEvent: RTCTrackEvent) => {
-        remoteTrack.value = trackEvent;
-        console.log("RTC peer track event: %O", trackEvent)
-      }
-    });
+  if (remote.value.srcObject) {
+    closeVideo();
   }
+  await createRemoteStream({
+    streamUrl: id,
+    onconnectionstatechange: (peerEvent: Event) => {
+      console.log("RTC peer connection event: %O", peerEvent)
+    },
+    ontrack: (trackEvent: RTCTrackEvent) => {
+      remoteTrack.value = trackEvent;
+      console.log("RTC peer track event: %O", trackEvent)
+    }
+  });
 }
 function playRemoteVideo() {
   if (!remote.value.srcObject && remoteTrack.value.streams && remoteTrack.value.streams[0]) {
