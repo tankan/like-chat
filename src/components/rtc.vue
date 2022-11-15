@@ -2,7 +2,7 @@
 import { ref, computed } from "vue";
 import type { Ref } from "vue";
 import { useDevicesList } from "@vueuse/core";
-import { useMediaStore } from "../store/media";
+// import { useMediaStore } from "../store/media";
 import { useSocketStore } from "../store/socket";
 import { createLocalStream } from "../utils/localStream";
 import { createRemoteStream } from "../utils/remoteStream"
@@ -16,11 +16,11 @@ const currentCamera = computed(() => cameras.value[0]?.deviceId)
 const currentMicrophone = computed(() => microphones.value[0]?.deviceId)
 const roomId = ref("rtc");
 const { initial } = useSocketStore();
-const {} = useMediaStore();
+// const {} = useMediaStore();
 const socket = initial();
 const uid = ref("");
-const hasJoined = ref(true);
-const remoteUsers = ref([]);
+const joining = ref(true);
+// const remoteUsers = ref([]);
 const local: Ref<HTMLVideoElement> = ref("local");
 const remote: Ref<HTMLVideoElement> = ref("remote");
 const peer: Ref<RTCPeerConnection> = ref(null);
@@ -33,31 +33,32 @@ socket.on("online", onOnline);
 function onConnect() {
   emit("login", roomId.value);
   uid.value = socket.id;
-  console.log("uid: %O, roomId: %O", uid.value, roomId.value);
+  console.log("rtc, uid: %O, roomId: %O", uid.value, roomId.value);
 }
 function onDisconnect() {
-  console.log("disconnect: %O", socket.disconnected);
+  console.log("rtc disconnect: %O", socket.disconnected);
 }
 function onJoined(room: string, id: string) {
-  console.info("joined: %O, %O", room, id);
+  console.info("rtc joined: %O, %O", room, id);
+  playRemoteStream(id);
 }
 function onLogout(room: string, id: string) {
-  console.info("logout: %O, %O", room, id);
+  console.info("rtc logout: %O, %O", room, id);
 }
 function onOnline(room: string, users: string[]) {
-  console.info("online: %O, %O", room, users);
+  console.info("rtc online: %O, %O", room, users);
   users.forEach((id) => {
     if (id !== uid.value) {
       playRemoteStream(id);
     }
   });
 }
-function emit(name: string, msg: any) {
-  socket.emit(name, msg);
+function emit(name: string, ...msg: any) {
+  socket.emit(name, ...msg);
 }
 async function joined() {
   emit("join", roomId.value);
-  hasJoined.value = false;
+  joining.value = false;
   const { pc, stream } = await createLocalStream({
     constraints: {
       width: 320,
@@ -70,6 +71,7 @@ async function joined() {
   });
   if (stream.value) {
     peer.value = pc;
+    joining.value = false;
     local.value.srcObject = stream.value;
   }
   console.log("加入连麦", roomId.value, pc, stream.value);
@@ -81,6 +83,7 @@ function logout() {
     sender.track?.stop();
   });
   local.value.srcObject = null;
+  joining.value = true;
   peer.value.close();
   console.log("结束连麦", roomId.value);
 }
@@ -99,7 +102,7 @@ async function playRemoteStream(id: string) {
   }
 }
 function playRemoteVideo() {
-  if (remoteTrack.value.streams && remoteTrack.value.streams[0]) {
+  if (!remote.value.srcObject && remoteTrack.value.streams && remoteTrack.value.streams[0]) {
     remote.value.srcObject = remoteTrack.value.streams[0];
   }
 }
@@ -107,7 +110,7 @@ function playRemoteVideo() {
 <template>
   <div>
     <div>
-      <button v-if="hasJoined" @click.stop="joined">加入连麦</button>
+      <button v-if="joining" @click.stop="joined">加入连麦</button>
       <button v-else @click.stop="logout">结束连麦</button>
       <button v-if="remoteTrack" @click.stop="playRemoteVideo">播放远端视频</button>
     </div>
