@@ -115,7 +115,7 @@ function playRemoteVideo() {
       <video ref="local" id="local" class="stream" autoplay muted></video>
     </div>
     <div>
-      <video ref="remote" id="remote" class="stream" autoplay muted></video>
+      <video ref="remote" id="remote" class="stream" autoplay></video>
     </div>
   </div>
 </template>
