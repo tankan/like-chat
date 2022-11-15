@@ -58,7 +58,6 @@ function emit(name: string, ...msg: any) {
   socket.emit(name, ...msg);
 }
 async function joined() {
-  emit("join", roomId.value);
   joining.value = false;
   const { pc, stream } = await createLocalStream({
     constraints: {
@@ -75,10 +74,10 @@ async function joined() {
     joining.value = false;
     local.value.srcObject = stream.value;
   }
+  emit("join", roomId.value);
   console.log("加入连麦", roomId.value, pc, stream.value);
 }
 function logout() {
-  emit("logout", roomId.value);
   const senders = peer.value.getSenders();
   senders.forEach((sender) => {
     sender.track?.stop();
@@ -87,6 +86,7 @@ function logout() {
   local.value.srcObject = null;
   joining.value = true;
   console.log("结束连麦", roomId.value);
+  emit("logout", roomId.value);
 }
 async function playRemoteStream(id: string) {
   if (remote.value.srcObject) {
