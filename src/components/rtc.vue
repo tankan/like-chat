@@ -26,6 +26,7 @@ const remote: Ref<HTMLVideoElement> = ref("remote");
 const peer: Ref<RTCPeerConnection> = ref(null);
 const remotePeer: Ref<RTCPeerConnection> = ref(null);
 const remoteTrack: Ref<RTCTrackEvent> = ref(null);
+const playing = ref(false);
 socket.on("connect", onConnect);
 socket.on("disconnect", onDisconnect);
 socket.on("joined", onJoined);
@@ -89,14 +90,7 @@ function logout() {
   emit("logout", roomId.value);
 }
 async function playRemoteStream(id: string) {
-  if (remote.value.srcObject) {
-    const senders = remotePeer.value.getSenders();
-    senders.forEach((sender) => {
-      sender.track?.stop();
-    });
-    remotePeer.value.close();
-    remote.value.srcObject = null;
-  }
+  stop();
   const pc = await createRemoteStream({
     streamUrl: id,
     onconnectionstatechange: (peerEvent: Event) => {
@@ -112,6 +106,18 @@ async function playRemoteStream(id: string) {
 function playRemoteVideo() {
   if (!remote.value.srcObject && remoteTrack.value.streams && remoteTrack.value.streams[0]) {
     remote.value.srcObject = remoteTrack.value.streams[0];
+    playing.value = true;
+  }
+}
+function stop() {
+  if (remotePeer.value) {
+    const senders = remotePeer.value.getSenders();
+    senders.forEach((sender) => {
+      sender.track?.stop();
+    });
+    remotePeer.value.close();
+    remote.value.srcObject = null;
+    playing.value = false;
   }
 }
 </script>
@@ -120,7 +126,8 @@ function playRemoteVideo() {
     <div>
       <button v-if="joining" @click.stop="joined">加入连麦</button>
       <button v-else @click.stop="logout">结束连麦</button>
-      <button v-if="remoteTrack" @click.stop="playRemoteVideo">播放远端视频</button>
+      <button v-if="playing" @click.stop="stop">结束播放远端视频</button>
+      <button v-else-if="remoteTrack" @click.stop="playRemoteVideo">开始播放远端视频</button>
     </div>
     <div>
       <video ref="local" id="local" class="stream" autoplay muted></video>
